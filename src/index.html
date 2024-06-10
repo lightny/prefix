@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Discord Dashboard</h1>
+    <div id="auth">
+        <button onclick="window.location.href='https://prefixbot.vercel.app/auth/discord'">Login with Discord</button>
+    </div>
+    <div id="dashboard" class="hidden">
+      <div class="guilds">
+        <h2>Guilds</h2>
+        <div id="guild-list"></div>
+      </div>
+      <div class="actions hidden" id="actions">
+        <h2 id="guild-name"></h2>
+        <div>
+          <input type="text" id="prefix" placeholder="Set Prefix">
+          <button onclick="setPrefix()">Set Prefix</button>
+        </div>
+        <div>
+          <input type="text" id="userId" placeholder="User ID">
+          <input type="text" id="reason" placeholder="Reason">
+          <button onclick="kickUser()">Kick User</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="scripts.js"></script>
+  <script>
+    const apiUrl = 'http://localhost:5000';
+
+    async function fetchGuilds() {
+      try {
+        const response = await fetch(`${apiUrl}/api/guilds`, { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error('Failed to fetch guilds');
+        }
+        const guilds = await response.json();
+        const guildList = document.getElementById('guild-list');
+        guildList.innerHTML = '';
+        guilds.forEach(guild => {
+          const button = document.createElement('button');
+          button.textContent = guild.name;
+          button.onclick = () => selectGuild(guild);
+          guildList.appendChild(button);
+        });
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+
+    function selectGuild(guild) {
+      document.getElementById('guild-name').textContent = guild.name;
+      document.getElementById('actions').classList.remove('hidden');
+      document.getElementById('actions').dataset.guildId = guild.id;
+    }
+
+    async function setPrefix() {
+      const guildId = document.getElementById('actions').dataset.guildId;
+      const prefix = document.getElementById('prefix').value;
+      try {
+        const response = await fetch(`${apiUrl}/api/setprefix`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ guildId, prefix }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update prefix');
+        }
+        alert('Prefix updated');
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+
+    async function kickUser() {
+      const guildId = document.getElementById('actions').dataset.guildId;
+      const userId = document.getElementById('userId').value;
+      const reason = document.getElementById('reason').value;
+      try {
+        const response = await fetch(`${apiUrl}/api/kick`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ guildId, userId, reason }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to kick user');
+        }
+        alert('User kicked');
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+
+    window.onload = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('dashboard')) {
+        document.getElementById('auth').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        fetchGuilds();
+      }
+    };
+  </script>
+</body>
+</html>
