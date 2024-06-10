@@ -1,0 +1,6 @@
+{
+    "ownerIds": ["981613705672400926"],
+    "testerIds": ["981613705672400926"],
+    "commandTestMode": "`❌` This command is currently in the testing stage, please try again later!",
+    "commandDevOnly": "`❌` This command is currently allowed for developers only, please try again later!"
+}
